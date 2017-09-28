@@ -79,11 +79,13 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		case "saveIBMAsset":				//Write IBM Asset
 			return saveIBMAsset(stub, args)
 
+		case "getTicketsByDate":			// Get all tickets by a time range
+			return getTicketsByDate(stub, args)
 		default:
 			fmt.Println("Received unknown invoke function name - " + function)
 			return shim.Error("Received unknown invoke function name - '" + function + "'")
 	} //END Switch
-	
+
 } // END func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 
 /* PARKING LOT

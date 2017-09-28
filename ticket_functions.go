@@ -573,3 +573,74 @@ func mergeTicketAsset(ticket Ticket, ibmasset IBMAsset) map[string]string {
 	//encode the output
 	return out
 }
+
+// ============================================================================================================================
+// Get all tickets by Date
+// ============================================================================================================================
+func getTicketsByDate(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var tickets []map[string]string
+
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	startDate := args[0]
+	endDate := args[1]
+
+	start, _ := time.Parse("2006-01-02", startDate)
+    end, _ := time.Parse("2006-01-02", endDate)
+
+	start = start.AddDate(0, 0, -1)
+	end = end.AddDate(0, 0, 1)
+
+	// fmt.Printf("start: %d-%02d-%02d\n", start.Year(), start.Month(), start.Day())
+	// fmt.Printf("end: %d-%02d-%02d\n", end.Year(), end.Month(), end.Day())
+
+	// ---- Get All Tickets ---- //
+	resultsIterator, err := stub.GetStateByRange("", "z999999999999999999")
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	defer resultsIterator.Close()
+
+	for resultsIterator.HasNext() {
+		pointer, err := resultsIterator.Next()
+		queryKeyAsStr, queryValAsBytes := pointer.GetKey(), pointer.GetValue()
+	    fmt.Println("queryKeyAsStr =" + queryKeyAsStr)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		// fmt.Println("on ticket id - ", queryKeyAsStr)
+		var ticket Ticket
+		json.Unmarshal(queryValAsBytes, &ticket) //un stringify it aka JSON.parse()
+
+		if ticket.ObjectType == TYPE_TICKET {
+
+			openDate := strings.Split(ticket.OpenDate, " ")[0]
+			filter := "2006-01-02"
+			if (strings.Contains(openDate, "/")) {
+				filter = "2006/01/02"
+			}
+
+			in, _ := time.Parse(filter, openDate)
+
+			if inTimeSpan(start, end, in) {
+				ibmasset, _ := getIBMAsset(stub, ticket.SerialNumber)
+				out := mergeTicketAsset(ticket, ibmasset)
+
+				tickets = append(tickets, out) //add this Ticket to the list
+			}
+		}
+	}
+
+	// fmt.Println("Tickets array - ", tickets)
+
+	//change to array of bytes
+	everythingAsBytes, _ := json.Marshal(tickets) //convert to array of bytes
+	return shim.Success(everythingAsBytes)
+}
+
+func inTimeSpan(start, end, check time.Time) bool {
+    return check.After(start) && check.Before(end)
+}
