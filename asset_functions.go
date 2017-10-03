@@ -1,5 +1,5 @@
 // =================================================
-// AssetChain v0.1 - write objects to ledger
+// AssetChain v0.5 - write objects to ledger
 // =================================================
 
 package main
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	_ "strconv"
 	_ "strings"
+	"strings"
 	"errors"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -54,22 +55,46 @@ func _saveIBMAsset(stub shim.ChaincodeStubInterface, ibmasset IBMAsset) pb.Respo
 	//check if ibmasset exists to append ticket
 	//var arrayTickets []string
 	existingIBMAsset, err := getIBMAsset(stub, ibmasset.SerialNumber)
-	if err == nil {
-		ibmasset.Tickets = uniqueElem(existingIBMAsset.Tickets, ibmasset.Tickets[0])
 
-		// If asset already exists and data came from RCMS, keep relevant information from blockchain
-		if ibmasset.OpsUpdate == USER_RCMS {
-			ibmasset.Prod				= existingIBMAsset.Prod
-			ibmasset.DescriptionProduct	= existingIBMAsset.DescriptionProduct
-			ibmasset.PwHardware			= existingIBMAsset.PwHardware
-			ibmasset.PwHD				= existingIBMAsset.PwHD
-			ibmasset.PwOS				= existingIBMAsset.PwOS
-			ibmasset.OpsUpdate			= existingIBMAsset.OpsUpdate
-			ibmasset.HasWarranty			= existingIBMAsset.HasWarranty
+
+	
+	if err == nil {
+		
+		if ibmasset.Status == "" {
+			if existingIBMAsset.Status != "" {
+				ibmasset.Status = existingIBMAsset.Status
+			} else {
+				ibmasset.Status = "Active"
+			}
+		}
+
+		statusValidation, err := validateAssetStatus(existingIBMAsset, ibmasset.Status)
+		
+		if (strings.Compare(existingIBMAsset.Status, ibmasset.Status) == 0) || (statusValidation && err == nil) {
+		
+			for i := range ibmasset.Tickets {
+				ibmasset.Tickets = uniqueElem(existingIBMAsset.Tickets, ibmasset.Tickets[i])
+				
+			}
+
+			// If asset already exists and data came from RCMS, keep relevant information from blockchain
+			if ibmasset.OpsUpdate == USER_RCMS {
+				ibmasset.Prod				= existingIBMAsset.Prod
+				ibmasset.DescriptionProduct	= existingIBMAsset.DescriptionProduct
+				ibmasset.PwHardware			= existingIBMAsset.PwHardware
+				ibmasset.PwHD				= existingIBMAsset.PwHD
+				ibmasset.PwOS				= existingIBMAsset.PwOS
+				ibmasset.OpsUpdate			= existingIBMAsset.OpsUpdate
+				ibmasset.HasWarranty		= existingIBMAsset.HasWarranty
+				ibmasset.Status			    = existingIBMAsset.Status
+			}
+		} else {
+			return shim.Error("Invalid status change from " + existingIBMAsset.Status + " to " + ibmasset.Status)
 		}
 	}
 
 	//store asset
+
 	ibmassetAsBytes, _ := json.Marshal(ibmasset)	//convert to array of bytes
 	err = stub.PutState(ibmasset.SerialNumber, ibmassetAsBytes)	  //store asset by its serial number
 	if err != nil {
@@ -85,8 +110,8 @@ func _saveIBMAsset(stub shim.ChaincodeStubInterface, ibmasset IBMAsset) pb.Respo
 func saveIBMAsset(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	fmt.Println("starting init_ibmasset")
 
-	if len(args) != 9 {
-		return shim.Error("Incorrect number of arguments. Expecting 9")
+	if len(args) != 10 {
+		return shim.Error("Incorrect number of arguments. Expecting 10")
 	}
 
 	var ibmasset IBMAsset
@@ -98,8 +123,13 @@ func saveIBMAsset(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	ibmasset.PwOS				= args[5]
 	ibmasset.Tickets			= append(ibmasset.Tickets, args[6])
 	ibmasset.OpsUpdate			= args[7]
-	ibmasset.HasWarranty			= args[8]
-
+	ibmasset.HasWarranty	    = args[8]
+	if args[9] == "" {
+		ibmasset.Status = "Active"
+	} else {
+		ibmasset.Status = args[9]
+	}
+	
 	fmt.Println(ibmasset)
 
 	return _saveIBMAsset(stub, ibmasset)

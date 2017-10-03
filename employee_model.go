@@ -1,5 +1,5 @@
 // ===================================================================================
-// AssetChain v0.1 -  Chaincode definition for employees
+// AssetChain v0.5 -  Chaincode definition for employees
 // ===================================================================================
 
 package main

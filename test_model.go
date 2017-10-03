@@ -1,5 +1,5 @@
 // ===================================================================================
-// AssetChain v0.1 -  Chaincode definition for test
+// AssetChain v0.5 -  Chaincode definition for test
 // ===================================================================================
 
 package main

@@ -1,5 +1,5 @@
 // ===================================================================================
-// AssetChain v0.1 -  Chaincode definition for assets
+// AssetChain v0.5 -  Chaincode definition for assets
 // ===================================================================================
 
 package main
@@ -16,4 +16,5 @@ type IBMAsset struct {
 	Tickets			   []string		`json:"tickets"`
     OpsUpdate          string  		`json:"opsUpdate"`
 	HasWarranty		   string		`json:"hasWarranty"`
+	Status			   string		`json:"status"`
 }

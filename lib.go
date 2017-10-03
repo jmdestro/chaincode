@@ -1,5 +1,5 @@
 // =================================================
-// AssetChain v0.1 - get ticket, employee and asset
+// AssetChain v0.5 - get ticket, employee and asset
 // =================================================
 
 package main

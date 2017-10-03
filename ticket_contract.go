@@ -1,5 +1,5 @@
 // =================================================
-// AssetChain v0.1 - Ticket SmartContract
+// AssetChain v0.5 - Ticket SmartContract
 // =================================================
 
 package main

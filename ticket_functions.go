@@ -1,5 +1,5 @@
 // =================================================
-// AssetChain v0.1 -
+// AssetChain v0.5 -
 // =================================================
 
 package main
@@ -315,7 +315,8 @@ func saveRCMSTicket(stub shim.ChaincodeStubInterface, args []string) pb.Response
 		PwOS:               "",
 		Tickets:            []string{ticket.Id},
 		OpsUpdate:          ticket.OpsUpdate,
-		HasWarranty:        ""}
+		HasWarranty:        "",
+		Status:        "Active"}
 
 	_saveIBMAsset(stub, ibmasset)
 
@@ -373,8 +374,8 @@ func saveTicket(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
 	fmt.Println("starting saveTicket")
 
-	if len(args) != 26 {
-		return shim.Error("Incorrect number of arguments. Expecting 26")
+	if len(args) != 27 {
+		return shim.Error("Incorrect number of arguments. Expecting 27")
 	}
 
 	//build ticket object
@@ -417,7 +418,8 @@ func saveTicket(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 		PwOS:               args[18],
 		Tickets:            []string{ticket.Id},
 		OpsUpdate:          ticket.OpsUpdate,
-		HasWarranty:        args[24]}
+		HasWarranty:        args[24],
+		Status:        		args[26]}
 
 	_saveIBMAsset(stub, ibmasset)
 
@@ -605,8 +607,8 @@ func getTicketsByDate(stub shim.ChaincodeStubInterface, args []string) pb.Respon
 
 	for resultsIterator.HasNext() {
 		pointer, err := resultsIterator.Next()
-		queryKeyAsStr, queryValAsBytes := pointer.GetKey(), pointer.GetValue()
-	    fmt.Println("queryKeyAsStr =" + queryKeyAsStr)
+		_, queryValAsBytes := pointer.GetKey(), pointer.GetValue()
+	    
 		if err != nil {
 			return shim.Error(err.Error())
 		}
